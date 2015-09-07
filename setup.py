@@ -15,7 +15,7 @@ if sys.version_info < required_version:
 setup(
 	name="liteusb",
 	version="unknown",
-	description="small footprint and configurable SATA core",
+	description="small footprint and configurable USB core",
 	long_description=README,
 	author="Florent Kermarrec",
 	author_email="florent@enjoy-digital.fr",
