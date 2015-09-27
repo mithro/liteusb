@@ -1,4 +1,5 @@
-from misoclib.tools.litescope.software.driver.reg import *
+from litescope.software.driver.reg import *
+
 from liteusb.software.ftdi import FTDIComDevice
 
 class LiteUSBWishboneDriverFTDI:
