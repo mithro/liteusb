@@ -1,10 +1,10 @@
-from migen.fhdl.std import *
+from migen import *
+
 from migen.flow.actor import *
 from migen.flow.network import *
 from migen.actorlib import structuring, spi
 from migen.bank.description import *
 from migen.bank.eventmanager import *
-from migen.genlib.record import Record
 
 from misoclib.mem.sdram.frontend import dma_lasmi
 from liteusb.common import *

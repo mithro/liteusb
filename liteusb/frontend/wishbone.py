@@ -1,7 +1,8 @@
-from migen.fhdl.std import *
+from migen import *
 
 from liteusb.common import *
-from misoclib.tools.wishbone import WishboneStreamingBridge
+
+from litex.soc.interconnect.wishbonebridge import WishboneStreamingBridge
 
 class LiteUSBWishboneBridge(WishboneStreamingBridge):
     def __init__(self, port, clk_freq):

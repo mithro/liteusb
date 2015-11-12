@@ -1,10 +1,11 @@
 import math
 
-from migen.fhdl.std import *
-from migen.flow.actor import *
-from migen.actorlib.fifo import SyncFIFO, AsyncFIFO
-from migen.fhdl.specials import *
+from migen import *
+from migen.fhdl.specials import Tristate
 from migen.genlib.cdc import MultiReg
+
+from litex.soc.interconnect.stream import *
+from litex.soc.interconnect.packet import *
 
 from liteusb.common import *
 
@@ -31,7 +32,7 @@ class FT245PHYSynchronous(Module):
                  fifo_depth=32,
                  read_time=128,
                  write_time=128):
-        dw = flen(pads.data)
+        dw = len(pads.data)
 
         # read fifo (FTDI --> SoC)
         read_fifo = RenameClockDomains(AsyncFIFO(phy_description(8), fifo_depth),
@@ -144,7 +145,7 @@ class FT245PHYAsynchronous(Module):
                  fifo_depth=32,
                  read_time=128,
                  write_time=128):
-        dw = flen(pads.data)
+        dw = len(pads.data)
         self.clk_freq = clk_freq
 
         # timings

@@ -1,18 +1,18 @@
 from migen.genlib.io import CRG
-from migen.actorlib.fifo import SyncFIFO
 
-from misoclib.soc import SoC
+from litex.soc.interconnect.stream import SyncFIFO
+from litex.soc.integration.soc_core import SoCCore
+from litex.soc.cores.gpio import GPIOOut
 
 from liteusb.common import *
 from liteusb.phy.ft245 import FT245PHY
 from liteusb.core import LiteUSBCore
 from liteusb.frontend.wishbone import LiteUSBWishboneBridge
 
-from misoclib.com.gpio import GPIOOut
 
-class LiteUSBSoC(SoC):
+class LiteUSBSoC(SoCCore):
     csr_map = {}
-    csr_map.update(SoC.csr_map)
+    csr_map.update(SoCCore.csr_map)
 
     usb_map = {
         "bridge": 0
@@ -20,11 +20,11 @@ class LiteUSBSoC(SoC):
 
     def __init__(self, platform):
         clk_freq = int((1/(platform.default_clk_period))*1000000000)
-        SoC.__init__(self, platform, clk_freq,
-            cpu_type="none",
-            with_csr=True, csr_data_width=32,
+        SoCCore.__init__(self, platform, clk_freq,
+            cpu_type=None,
+            csr_data_width=32,
             with_uart=False,
-            with_identifier=True,
+            ident="LiteUSB example design",
             with_timer=False
         )
         self.submodules.crg = CRG(platform.request(platform.default_clk_name))

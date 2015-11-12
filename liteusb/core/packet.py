@@ -1,6 +1,9 @@
-from liteusb.common import *
-from migen.actorlib.structuring import Pack, Unpack
 from migen.genlib.misc import WaitTimer
+
+from litex.soc.interconnect.stream import Pack, Unpack
+
+from liteusb.common import *
+
 
 class LiteUSBPacketizer(Module):
     def __init__(self):
@@ -89,7 +92,7 @@ class LiteUSBDepacketizer(Module):
             source.length[0:8],
         ]
 
-        header_pack = InsertReset(Pack(phy_description(8), len(header)))
+        header_pack = ResetInserter()(Pack(phy_description(8), len(header)))
         self.submodules += header_pack
 
         for i, byte in enumerate(header):

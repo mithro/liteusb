@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 
 from liteusb.common import *
 from misoclib.com.uart import UART

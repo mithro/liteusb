@@ -1,10 +1,11 @@
 from collections import OrderedDict
-from migen.fhdl.std import *
-from migen.genlib.fsm import FSM, NextState
-from migen.genlib.record import *
-from migen.genlib.misc import chooser, optree
-from migen.flow.actor import Sink, Source
-from migen.actorlib.fifo import SyncFIFO
+from functools import reduce
+from operator import xor
+
+from migen import *
+from migen.genlib.misc import chooser
+
+from litex.soc.interconnect.stream import *
 
 from liteusb.common import *
 
@@ -75,11 +76,11 @@ class CRCEngine(Module):
                     xors += [self.last[n]]
                 elif t == "din":
                     xors += [self.data[n]]
-            self.comb += self.next[i].eq(optree("^", xors))
+            self.comb += self.next[i].eq(reduce(xor, xors))
 
 
-@DecorateModule(InsertReset)
-@DecorateModule(InsertCE)
+@ResetInserter()
+@CEInserter()
 class CRC32(Module):
     """IEEE 802.3 CRC
 
@@ -147,7 +148,7 @@ class CRCInserter(Module):
 
         # # #
 
-        dw = flen(sink.data)
+        dw = len(sink.data)
         crc = crc_class(dw)
         fsm = FSM(reset_state="IDLE")
         self.submodules += crc, fsm
@@ -228,7 +229,7 @@ class CRCChecker(Module):
 
         # # #
 
-        dw = flen(sink.data)
+        dw = len(sink.data)
         crc = crc_class(dw)
         self.submodules += crc
         ratio = crc.width//dw

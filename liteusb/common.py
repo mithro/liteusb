@@ -1,9 +1,8 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import *
-from migen.actorlib.fifo import *
-from migen.flow.actor import EndpointDescription
-from migen.actorlib.packet import *
-from migen.actorlib.structuring import Pipeline
+
+from litex.soc.interconnect.stream import *
+from litex.soc.interconnect.packet import *
 
 
 packet_header_length = 9
