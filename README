@@ -16,9 +16,9 @@ XXX
 ---------
 LiteUSB provides a small footprint and configurable USB core.
 
-LiteUSB is part of MiSoC libraries whose aims are to lower entry level of
+LiteUSB is part of LiteX libraries whose aims are to lower entry level of
 complex FPGA cores by providing simple, elegant and efficient implementations
-ofcomponents used in today's SoC such as Ethernet, SATA, PCIe, SDRAM Controller...
+of components used in today's SoC such as Ethernet, SATA, PCIe, SDRAM Controller...
 
 The core uses simple and specific streaming buses and will provides in the future
 adapters to use standardized AXI or Avalon-ST streaming buses.
@@ -26,15 +26,16 @@ adapters to use standardized AXI or Avalon-ST streaming buses.
 Since Python is used to describe the HDL, the core is highly and easily
 configurable.
 
-LiteUSB uses technologies developed in partnership with M-Labs Ltd:
+LiteUSB is built using LiteX and uses technologies developed in partnership with
+M-Labs Ltd:
  - Migen enables generating HDL with Python in an efficient way.
  - MiSoC provides the basic blocks to build a powerful and small footprint SoC.
 
-LiteUSB can be used as MiSoC library or can be integrated with your standard
+LiteUSB can be used as LiteX library or can be integrated with your standard
 design flow by generating the verilog rtl that you will use as a standard core.
 
 [> Features
------------
+------------
 - FTDI2232 slave fifo core (DMA, virtual TTY) + host software
 
 [> Possible improvements
@@ -51,6 +52,14 @@ devel [AT] lists.m-labs.hk.
 
 [> Getting started
 ------------------
+1. Install Python3 and your vendor's software
+
+2. Obtain LiteX and install it:
+  git clone https://github.com/enjoy-digital/litex --recursive
+  cd litex
+  python3 setup.py install
+  cd ..
+  
 XXX
 
 [> Simulations:
