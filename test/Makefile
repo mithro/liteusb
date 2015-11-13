@@ -1,7 +1,7 @@
-MSCDIR = ../../
+COREDIR = ../
 PYTHON = python3
 
-CMD = PYTHONPATH=$(MSCDIR) $(PYTHON)
+CMD = PYTHONPATH=$(COREDIR) $(PYTHON)
 
 ft245_sync_tb:
 	$(CMD) ft245_sync_tb.py

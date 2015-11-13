@@ -1,15 +1,21 @@
-from migen.fhdl.std import *
-from migen.flow.actor import *
-from migen.fhdl.specials import *
-
-from migen.sim.generic import run_simulation
+from migen import *
+from migen.fhdl.specials import Tristate
 
 from liteusb.common import *
 from liteusb.phy.ft245 import FT245PHYSynchronous
-from liteusb.test.common import *
 
-# XXX for now use it from liteeth to avoid duplication
-from misoclib.com.liteeth.test.common import *
+from test.common import *
+
+class RandRun:
+    def __init__(self, level=0):
+        self.run = True
+        self.level = level
+
+    def do_simulation(self):
+        self.run = True
+        n = randn(100)
+        if n < self.level:
+            self.run = False
 
 class FT245SynchronousModel(Module, RandRun):
     def __init__(self, rd_data):
@@ -27,7 +33,6 @@ class FT245SynchronousModel(Module, RandRun):
         self.siwua = Signal()
         self.pwren_n = Signal(reset=1)
 
-        self.init = True
         self.wr_data = []
         self.wait_wr_n = False
         self.rd_done = 0
@@ -36,46 +41,54 @@ class FT245SynchronousModel(Module, RandRun):
         self.data_w = Signal(8)
         self.data_r = Signal(8)
 
-        self.specials += Tristate(self.data, self.data_r, ~self.oe_n, self.data_w)
+        #self.specials += Tristate(self.data, self.data_r, ~self.oe_n, self.data_w)
 
-    def wr_sim(self, selfp):
-        if not selfp.wr_n and not selfp.txe_n:
-            self.wr_data.append(selfp.data_w)
+    def tristate_sim(self):
+        if (yield self.oe_n):
+            yield self.data_r.eq(self.data)
+        yield self.data_w.eq(self.data)
+
+    def wr_sim(self):
+        print("wr_sim")
+        if not (yield self.wr_n) and not (yield self.txe_n):
+            self.wr_data.append((yield self.data_w))
             self.wait_wr_n = False
 
         if not self.wait_wr_n:
             if self.run:
-                selfp.txe_n = 1
+                yield self.txe_n.eq(1)
             else:
-                if selfp.txe_n:
+                if (yield self.txe_n):
                     self.wait_wr_n = True
-                selfp.txe_n = 0
+                yield self.txe_n.eq(0)
 
-    def rd_sim(self, selfp):
-        rxf_n = selfp.rxf_n
+    def rd_sim(self):
+        print("rd_sim")
+        rxf_n = (yield self.rxf_n)
         if self.run:
             if self.rd_idx < len(self.rd_data)-1:
-                self.rd_done = selfp.rxf_n
-                selfp.rxf_n = 0
+                self.rd_done = (yield self.rxf_n)
+                yield self.rxf_n.eq(0)
             else:
-                selfp.rxf_n = self.rd_done
+                yield self.rxf_n.eq(self.rd_done)
         else:
-            selfp.rxf_n = self.rd_done
+            yield self.rxf_n.eq(self.rd_done)
 
-        if not selfp.rd_n and not selfp.oe_n:
+        if not (yield self.rd_n) and not (yield self.oe_n):
             if self.rd_idx < len(self.rd_data)-1:
                 self.rd_idx += not rxf_n
-            selfp.data_r = self.rd_data[self.rd_idx]
+            yield self.data_r.eq(self.rd_data[self.rd_idx])
             self.rd_done = 1
 
-    def do_simulation(self, selfp):
-        RandRun.do_simulation(self, selfp)
-        if self.init:
-            selfp.rxf_n = 0
-            self.wr_data = []
-            self.init = False
-        self.wr_sim(selfp)
-        self.rd_sim(selfp)
+    def generator(self):
+        yield self.rxf_n.eq(0)
+        self.wr_data = []
+        while True:
+            RandRun.do_simulation(self)
+            yield from self.tristate_sim()
+            yield from self.wr_sim()
+            yield from self.rd_sim()
+            yield
 
 test_packet = [i%256 for i in range(512)]
 
@@ -83,7 +96,7 @@ test_packet = [i%256 for i in range(512)]
 class TB(Module):
     def __init__(self):
         self.submodules.model = FT245SynchronousModel(test_packet)
-        self.submodules.phy = FT245PHYSynchronous(self.model)
+        self.submodules.phy = FT245PHYSynchronous(self.model, 100*1e6)
 
         self.submodules.streamer = PacketStreamer(phy_description(8))
         self.submodules.streamer_randomizer = AckRandomizer(phy_description(8), level=10)
@@ -103,25 +116,33 @@ class TB(Module):
             Record.connect(self.logger_randomizer.source, self.logger.sink)
         ]
 
-        # Use sys_clk as ftdi_clk in simulation
-        self.comb += [
-            ClockSignal("ftdi").eq(ClockSignal()),
-            ResetSignal("ftdi").eq(ResetSignal())
-        ]
 
-    def gen_simulation(self, selfp):
-        yield from self.streamer.send(Packet(test_packet))
-        for i in range(2000):
-            yield
-        s, l, e = check(test_packet, self.model.wr_data)
-        print("shift " + str(s) + " / length " + str(l) + " / errors " + str(e))
+def main_generator(dut):
+    dut.streamer.send(Packet(test_packet))
+    for i in range(256):
+        print(len(dut.streamer.packet))
+        yield
+    #s, l, e = check(test_packet, dut.model.wr_data)
+    #print("shift " + str(s) + " / length " + str(l) + " / errors " + str(e))
 
-        s, l, e = check(test_packet, self.logger.packet[1:])
-        print("shift " + str(s) + " / length " + str(l) + " / errors " + str(e))
+    #s, l, e = check(test_packet, dut.logger.packet[1:])
+    #print("shift " + str(s) + " / length " + str(l) + " / errors " + str(e))
 
+    # XXX: find a way to exit properly
+    import sys
+    sys.exit()
 
-def main():
-    run_simulation(TB(), ncycles=8000, vcd_name="my.vcd", keep_files=True)
 
 if __name__ == "__main__":
-    main()
+    tb = TB()
+    generators = {
+        "sys" :   [main_generator(tb),
+                   tb.streamer.generator(),
+                   tb.streamer_randomizer.generator(),
+                   tb.logger_randomizer.generator(),
+                   tb.logger.generator()],
+        "usb":    tb.model.generator()
+    }
+    clocks = {"sys": 10,
+              "usb": 10}
+    run_simulation(tb, generators, clocks, vcd_name="sim.vcd")
