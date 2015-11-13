@@ -235,7 +235,7 @@ class CRCChecker(Module):
         ratio = crc.width//dw
 
         error = Signal()
-        fifo = InsertReset(SyncFIFO(layout, ratio + 1))
+        fifo = ResetInserter()(SyncFIFO(layout, ratio + 1))
         self.submodules += fifo
 
         fsm = FSM(reset_state="RESET")

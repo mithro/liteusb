@@ -1,17 +1,13 @@
 import binascii
 
-from migen.fhdl.std import *
-from migen.flow.actor import *
-from migen.fhdl.specials import *
+from litex.gen import *
+from litex.gen.fhdl.specials import Tristate
+from litex.gen.sim.generic import run_simulation
 
-from migen.sim.generic import run_simulation
+from litex.soc.interconnect.stream_sim import *
 
 from liteusb.common import *
 from liteusb.core import LiteUSBCore
-from liteusb.test.common import *
-
-# XXX for now use it from liteeth to avoid duplication
-from misoclib.com.liteeth.test.common import *
 
 def crc32(l):
     crc = []
@@ -85,7 +81,7 @@ class PHYModel(Module):
 class TB(Module):
     def __init__(self):
         self.submodules.phy = PHYModel()
-        self.submodules.core = LiteUSBCore(self.phy)
+        self.submodules.core = LiteUSBCore(self.phy, 80*1000000)
 
         self.submodules.phy_streamer = PacketStreamer(phy_description(8))
         self.submodules.phy_streamer_randomizer = AckRandomizer(phy_description(8), level=0)

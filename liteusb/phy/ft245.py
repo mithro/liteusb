@@ -5,7 +5,7 @@ from litex.gen.fhdl.specials import Tristate
 from litex.gen.genlib.cdc import MultiReg
 
 from litex.soc.interconnect.stream import *
-from litex.soc.interconnect.packet import *
+from litex.soc.interconnect.stream_packet import *
 
 from liteusb.common import *
 

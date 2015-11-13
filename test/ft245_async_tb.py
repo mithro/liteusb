@@ -5,10 +5,10 @@ from litex.gen import *
 from litex.gen.fhdl.specials import Tristate
 from litex.gen.sim.generic import run_simulation
 
+from litex.soc.interconnect.stream_sim import *
+
 from liteusb.common import *
 from liteusb.phy.ft245 import FT245PHYAsynchronous
-
-from test.common import *
 
 class FT245AsynchronousModel(Module):
     def __init__(self, clk_freq, rd_data):

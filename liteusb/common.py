@@ -2,7 +2,7 @@ from litex.gen import *
 from litex.gen.genlib.fsm import *
 
 from litex.soc.interconnect.stream import *
-from litex.soc.interconnect.packet import *
+from litex.soc.interconnect.stream_packet import *
 
 
 packet_header_length = 9
