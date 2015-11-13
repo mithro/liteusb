@@ -1,5 +1,5 @@
-from migen import *
-from migen.genlib.fsm import *
+from litex.gen import *
+from litex.gen.genlib.fsm import *
 
 from litex.soc.interconnect.stream import *
 from litex.soc.interconnect.packet import *

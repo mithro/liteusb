@@ -1,4 +1,4 @@
-from migen.genlib.misc import WaitTimer
+from litex.gen.genlib.misc import WaitTimer
 
 from litex.soc.interconnect.stream import Pack, Unpack
 

@@ -1,8 +1,8 @@
 import math
 
-from migen import *
-from migen.fhdl.specials import Tristate
-from migen.genlib.cdc import MultiReg
+from litex.gen import *
+from litex.gen.fhdl.specials import Tristate
+from litex.gen.genlib.cdc import MultiReg
 
 from litex.soc.interconnect.stream import *
 from litex.soc.interconnect.packet import *

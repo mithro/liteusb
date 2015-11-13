@@ -1,4 +1,4 @@
-from migen import *
+from litex.gen import *
 
 from liteusb.common import *
 from misoclib.com.uart import UART

@@ -1,15 +1,14 @@
-from migen.fhdl.std import *
-from migen.flow.actor import *
-from migen.fhdl.specials import *
 
-from migen.sim.generic import run_simulation
+import math
+
+from litex.gen import *
+from litex.gen.fhdl.specials import Tristate
+from litex.gen.sim.generic import run_simulation
 
 from liteusb.common import *
 from liteusb.phy.ft245 import FT245PHYAsynchronous
-from liteusb.test.common import *
 
-# XXX for now use it from liteeth to avoid duplication
-from misoclib.com.liteeth.test.common import *
+from test.common import *
 
 class FT245AsynchronousModel(Module):
     def __init__(self, clk_freq, rd_data):
