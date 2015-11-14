@@ -8,10 +8,6 @@
       A small footprint and configurable USB core
                 powered by Migen
 
-[> Doc
----------
-XXX
-
 [> Intro
 ---------
 LiteUSB provides a small footprint and configurable USB core.
