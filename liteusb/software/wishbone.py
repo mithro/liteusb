@@ -2,6 +2,8 @@ from litescope.software.driver.reg import *
 
 from liteusb.software.ftdi import FTDIComDevice
 
+# TODO: create LiteX comm_ftdi or comm_usb
+
 class LiteUSBWishboneDriverFTDI:
     cmds = {
         "write": 0x01,
