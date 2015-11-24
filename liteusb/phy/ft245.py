@@ -231,12 +231,20 @@ class FT245PHYAsynchronous(Module):
         pads.rd_n.reset = 1
 
         read_fsm = FSM(reset_state="IDLE")
-        read_counter = Counter(8)
-        self.submodules += read_fsm, read_counter
+        self.submodules += read_fsm
+        read_counter = Signal(8)
+        read_counter_reset = Signal()
+        read_counter_ce = Signal()
+        self.sync += \
+            If(read_counter_reset,
+                read_counter.eq(0)
+            ).Elif(read_counter_ce,
+                read_counter.eq(read_counter + 1)
+            )
 
         read_fsm.act("IDLE",
             read_done.eq(1),
-            read_counter.reset.eq(1),
+            read_counter_reset.eq(1),
             If(fsm.ongoing("READ") & wants_read,
                 If(~commuting,
                     NextState("PULSE_RD_N")
@@ -245,8 +253,8 @@ class FT245PHYAsynchronous(Module):
         )
         read_fsm.act("PULSE_RD_N",
             pads.rd_n.eq(0),
-            read_counter.ce.eq(1),
-            If(read_counter.value == max((tRD-1), (tRDDataSetup + tMultiReg -1)),
+            read_counter_ce.eq(1),
+            If(read_counter == max((tRD-1), (tRDDataSetup + tMultiReg -1)),
                 NextState("ACQUIRE_DATA")
             )
         )
@@ -265,12 +273,20 @@ class FT245PHYAsynchronous(Module):
         pads.wr_n.reset = 1
 
         write_fsm = FSM(reset_state="IDLE")
-        write_counter = Counter(8)
-        self.submodules += write_fsm, write_counter
+        self.submodules += write_fsm
+        write_counter = Signal(8)
+        write_counter_reset = Signal()
+        write_counter_ce = Signal()
+        self.sync += \
+            If(write_counter_reset,
+                write_counter.eq(0)
+            ).Elif(write_counter_ce,
+                write_counter.eq(write_counter + 1)
+            )
 
         write_fsm.act("IDLE",
             write_done.eq(1),
-            write_counter.reset.eq(1),
+            write_counter_reset.eq(1),
             If(fsm.ongoing("WRITE") & wants_write,
                 If(~commuting,
                     NextState("SET_DATA")
@@ -280,9 +296,9 @@ class FT245PHYAsynchronous(Module):
         write_fsm.act("SET_DATA",
             data_oe.eq(1),
             data_w.eq(write_fifo.source.data),
-            write_counter.ce.eq(1),
-            If(write_counter.value == (tWRDataSetup-1),
-                write_counter.reset.eq(1),
+            write_counter_ce.eq(1),
+            If(write_counter == (tWRDataSetup-1),
+                write_counter_reset.eq(1),
                 NextState("PULSE_WR_N")
             )
         )
@@ -290,8 +306,8 @@ class FT245PHYAsynchronous(Module):
             data_oe.eq(1),
             data_w.eq(write_fifo.source.data),
             pads.wr_n.eq(0),
-            write_counter.ce.eq(1),
-            If(write_counter.value == (tWR-1),
+            write_counter_ce.eq(1),
+            If(write_counter == (tWR-1),
                 NextState("WAIT_TXE_N")
             )
         )
