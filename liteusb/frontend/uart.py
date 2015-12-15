@@ -10,7 +10,7 @@ class LiteUSBUARTPHY:
 
 class LiteUSBUART(UART):
     def __init__(self, port,
-                 tx_fifo_depth=16,
+                 tx_fifo_depth=16, tx_ack_on_full=False,
                  rx_fifo_depth=16):
 
         phy = LiteUSBUARTPHY()
@@ -24,7 +24,8 @@ class LiteUSBUART(UART):
             port.sink.length.eq(1),
             port.sink.dst.eq(port.tag),
             port.sink.data.eq(phy.sink.data),
-            phy.sink.ack.eq(port.sink.ack)
+            phy.sink.ack.eq(port.sink.ack | 
+                            (self.ev.tx.trigger & int(tx_ack_on_full)))
         ]
 
         # RX
