@@ -1,4 +1,4 @@
-from migen.genlib.io import CRG
+from litex.gen.genlib.io import CRG
 
 from litex.soc.interconnect.stream import SyncFIFO
 from litex.soc.integration.soc_core import SoCCore
