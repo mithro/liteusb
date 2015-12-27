@@ -100,17 +100,17 @@ class TB(Module):
 
 
         self.comb += [
-            Record.connect(self.phy_streamer.source, self.phy_streamer_randomizer.sink),
-            Record.connect(self.phy_streamer_randomizer.source, self.phy.source),
+            self.phy_streamer.source.connect(self.phy_streamer_randomizer.sink),
+            self.phy_streamer_randomizer.source.connect(self.phy.source),
 
-            Record.connect(self.core_streamer.source, self.core_streamer_randomizer.sink),
-            Record.connect(self.core_streamer_randomizer.source, user_port.sink),
+            self.core_streamer.source.connect(self.core_streamer_randomizer.sink),
+            self.core_streamer_randomizer.source.connect(user_port.sink),
 
-            Record.connect(user_port.source, self.core_logger_randomizer.sink),
-            Record.connect(self.core_logger_randomizer.source, self.core_logger.sink),
+            user_port.source.connect(self.core_logger_randomizer.sink),
+            self.core_logger_randomizer.source.connect(self.core_logger.sink),
 
-            Record.connect(self.phy.sink, self.phy_logger_randomizer.sink),
-            Record.connect(self.phy_logger_randomizer.source, self.phy_logger.sink)
+            self.phy.sink.connect(self.phy_logger_randomizer.sink),
+            self.phy_logger_randomizer.source.connect(self.phy_logger.sink)
         ]
 
     def gen_simulation(self, selfp):

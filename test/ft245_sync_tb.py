@@ -89,7 +89,7 @@ class TB(Module):
         self.submodules.logger = PacketLogger(phy_description(8))
 
         self.comb += [
-            Record.connect(self.streamer.source, self.streamer_randomizer.sink),
+            self.streamer.source.connect(self.streamer_randomizer.sink),
             self.phy.sink.stb.eq(self.streamer_randomizer.source.stb),
             self.phy.sink.data.eq(self.streamer_randomizer.source.data),
             self.streamer_randomizer.source.ack.eq(self.phy.sink.ack),
@@ -97,7 +97,7 @@ class TB(Module):
             self.logger_randomizer.sink.stb.eq(self.phy.source.stb),
             self.logger_randomizer.sink.data.eq(self.phy.source.data),
             self.phy.source.ack.eq(self.logger_randomizer.sink.ack),
-            Record.connect(self.logger_randomizer.source, self.logger.sink)
+            self.logger_randomizer.source.connect(self.logger.sink)
         ]
 
         # Use sys_clk as ftdi_clk in simulation

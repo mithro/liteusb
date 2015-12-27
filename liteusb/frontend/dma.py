@@ -97,6 +97,6 @@ class LiteUSBDMA(Module, AutoCSR):
         self.submodules.reader = LiteUSBDMAReader(lasmim_dma_rd, port.tag)
         self.submodules.ev = SharedIRQ(self.writer.ev, self.reader.ev)
         self.comb += [
-            Record.connect(port.source, self.writer.sink),
-            Record.connect(self.reader.source, port.sink),
+            port.source.connect(self.writer.sink),
+            self.reader.source.connect(port.sink)
         ]
