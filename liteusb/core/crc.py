@@ -5,7 +5,7 @@ from operator import xor
 from litex.gen import *
 from litex.gen.genlib.misc import chooser
 
-from litex.soc.interconnect.stream import *
+from litex.soc.interconnect import stream
 
 from liteusb.common import *
 
@@ -142,8 +142,8 @@ class CRCInserter(Module):
         Packets output with CRC.
     """
     def __init__(self, crc_class, layout):
-        self.sink = sink = Sink(layout)
-        self.source = source = Source(layout)
+        self.sink = sink = stream.Endpoint(layout)
+        self.source = source = stream.Endpoint(layout)
         self.busy = Signal()
 
         # # #
@@ -156,7 +156,7 @@ class CRCInserter(Module):
         fsm.act("IDLE",
             crc.reset.eq(1),
             sink.ack.eq(1),
-            If(sink.stb & sink.sop,
+            If(sink.stb,
                 sink.ack.eq(0),
                 NextState("COPY"),
             )
@@ -223,8 +223,8 @@ class CRCChecker(Module):
         on eop when CRC OK / set to 1 when CRC KO.
     """
     def __init__(self, crc_class, layout):
-        self.sink = sink = Sink(layout)
-        self.source = source = Source(layout)
+        self.sink = sink = stream.Endpoint(layout)
+        self.source = source = stream.Endpoint(layout)
         self.busy = Signal()
 
         # # #
@@ -235,7 +235,7 @@ class CRCChecker(Module):
         ratio = crc.width//dw
 
         error = Signal()
-        fifo = ResetInserter()(SyncFIFO(layout, ratio + 1))
+        fifo = ResetInserter()(stream.SyncFIFO(layout, ratio + 1))
         self.submodules += fifo
 
         fsm = FSM(reset_state="RESET")
@@ -255,7 +255,6 @@ class CRCChecker(Module):
             self.sink.ack.eq(fifo_in),
 
             source.stb.eq(sink.stb & fifo_full),
-            source.sop.eq(fifo.source.sop),
             source.eop.eq(sink.eop),
             fifo.source.ack.eq(fifo_out),
             source.payload.eq(fifo.source.payload),
@@ -270,7 +269,7 @@ class CRCChecker(Module):
         )
         fsm.act("IDLE",
             crc.data.eq(sink.data),
-            If(sink.stb & sink.sop & sink.ack,
+            If(sink.stb & sink.ack,
                 crc.ce.eq(1),
                 NextState("COPY")
             )

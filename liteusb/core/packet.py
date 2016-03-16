@@ -1,14 +1,14 @@
 from litex.gen.genlib.misc import WaitTimer
 
-from litex.soc.interconnect.stream import Pack, Unpack
+from litex.soc.interconnect import stream
 
 from liteusb.common import *
 
 
 class LiteUSBPacketizer(Module):
     def __init__(self):
-        self.sink = sink = Sink(user_description(8))
-        self.source = source = Source(phy_description(8))
+        self.sink = sink = stream.Endpoint(user_description(8))
+        self.source = source = stream.Endpoint(phy_description(8))
 
         # # #
 
@@ -32,7 +32,7 @@ class LiteUSBPacketizer(Module):
             sink.length[0:8],
         ]
 
-        header_unpack = Unpack(len(header), phy_description(8))
+        header_unpack = stream.Unpack(len(header), phy_description(8))
         self.submodules += header_unpack
 
         for i, byte in enumerate(header):
@@ -43,7 +43,7 @@ class LiteUSBPacketizer(Module):
         self.submodules += fsm
 
         fsm.act("IDLE",
-            If(sink.stb & sink.sop,
+            If(sink.stb,
                 NextState("INSERT_HEADER")
             )
         )
@@ -70,8 +70,8 @@ class LiteUSBPacketizer(Module):
 
 class LiteUSBDepacketizer(Module):
     def __init__(self, clk_freq, timeout=10):
-        self.sink = sink = Sink(phy_description(8))
-        self.source = source = Source(user_description(8))
+        self.sink = sink = stream.Endpoint(phy_description(8))
+        self.source = source = stream.Endpoint(user_description(8))
 
         # # #
 
@@ -92,7 +92,7 @@ class LiteUSBDepacketizer(Module):
             source.length[0:8],
         ]
 
-        header_pack = ResetInserter()(Pack(phy_description(8), len(header)))
+        header_pack = ResetInserter()(stream.Pack(phy_description(8), len(header)))
         self.submodules += header_pack
 
         for i, byte in enumerate(header):
@@ -136,13 +136,11 @@ class LiteUSBDepacketizer(Module):
 
         self.comb += header_pack.reset.eq(self.timer.done)
 
-        sop = Signal()
         eop = Signal()
         cnt = Signal(32)
 
         fsm.act("COPY",
             source.stb.eq(sink.stb),
-            source.sop.eq(sop),
             source.eop.eq(eop),
             source.data.eq(sink.data),
             sink.ack.eq(source.ack),
@@ -157,5 +155,4 @@ class LiteUSBDepacketizer(Module):
             ).Elif(source.stb & source.ack,
                 cnt.eq(cnt + 1)
             )
-        self.comb += sop.eq(cnt == 0)
         self.comb += eop.eq(cnt == source.length - 1)

@@ -5,8 +5,8 @@ from misoclib.com.uart import UART
 
 class LiteUSBUARTPHY:
     def __init__(self):
-        self.sink = Sink([("data", 8)])
-        self.source = Source([("data", 8)])
+        self.sink = stream.Endpoint([("data", 8)])
+        self.source = stream.Endpoint([("data", 8)])
 
 class LiteUSBUART(UART):
     def __init__(self, port,
@@ -19,7 +19,6 @@ class LiteUSBUART(UART):
         # TX
         self.comb += [
             port.sink.stb.eq(phy.sink.stb),
-            port.sink.sop.eq(1),
             port.sink.eop.eq(1),
             port.sink.length.eq(1),
             port.sink.dst.eq(port.tag),

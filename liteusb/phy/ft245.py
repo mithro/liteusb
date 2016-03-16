@@ -4,7 +4,7 @@ from litex.gen import *
 from litex.gen.fhdl.specials import Tristate
 from litex.gen.genlib.cdc import MultiReg
 
-from litex.soc.interconnect.stream import *
+from litex.soc.interconnect import stream
 from litex.soc.interconnect.stream_packet import *
 
 from liteusb.common import *
@@ -35,12 +35,12 @@ class FT245PHYSynchronous(Module):
         dw = len(pads.data)
 
         # read fifo (FTDI --> SoC)
-        read_fifo = ClockDomainsRenamer({"write": "usb", "read": "sys"})(AsyncFIFO(phy_description(8), fifo_depth))
-        read_buffer = ClockDomainsRenamer("usb")(SyncFIFO(phy_description(8), 4))
+        read_fifo = ClockDomainsRenamer({"write": "usb", "read": "sys"})(stream.AsyncFIFO(phy_description(8), fifo_depth))
+        read_buffer = ClockDomainsRenamer("usb")(stream.SyncFIFO(phy_description(8), 4))
         self.comb += read_buffer.source.connect(read_fifo.sink)
 
         # write fifo (SoC --> FTDI)
-        write_fifo = ClockDomainsRenamer({"write": "sys", "read": "usb"})(AsyncFIFO(phy_description(8), fifo_depth))
+        write_fifo = ClockDomainsRenamer({"write": "sys", "read": "usb"})(stream.AsyncFIFO(phy_description(8), fifo_depth))
 
         self.submodules += read_fifo, read_buffer, write_fifo
 
@@ -153,10 +153,10 @@ class FT245PHYAsynchronous(Module):
         tMultiReg    = 2
 
         # read fifo (FTDI --> SoC)
-        read_fifo = SyncFIFO(phy_description(8), fifo_depth)
+        read_fifo = stream.SyncFIFO(phy_description(8), fifo_depth)
 
         # write fifo (SoC --> FTDI)
-        write_fifo = SyncFIFO(phy_description(8), fifo_depth)
+        write_fifo = stream.SyncFIFO(phy_description(8), fifo_depth)
 
         self.submodules += read_fifo, write_fifo
 

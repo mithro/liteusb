@@ -1,3 +1,5 @@
+from litex.soc.interconnect import stream
+
 from liteusb.common import *
 from liteusb.core.packet import LiteUSBPacketizer, LiteUSBDepacketizer
 from liteusb.core.crc import LiteUSBCRC32Inserter, LiteUSBCRC32Checker
@@ -27,5 +29,5 @@ class LiteUSBCore(Module):
         tx_pipeline += [self.crossbar.master]
 
         # graph
-        self.submodules.rx_pipeline = Pipeline(*rx_pipeline)
-        self.submodules.tx_pipeline = Pipeline(*reversed(tx_pipeline))
+        self.submodules.rx_pipeline = stream.Pipeline(*rx_pipeline)
+        self.submodules.tx_pipeline = stream.Pipeline(*reversed(tx_pipeline))

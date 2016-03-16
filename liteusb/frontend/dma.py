@@ -6,13 +6,15 @@ from litex.gen.actorlib import structuring, spi
 from litex.gen.bank.description import *
 from litex.gen.bank.eventmanager import *
 
-from misoclib.mem.sdram.frontend import dma_lasmi
+from litex.soc.interconnect import stream
+from litex.soc.interconnect import dma_lasmi
+
 from liteusb.common import *
 
 
 class LiteUSBDMAWriter(Module, AutoCSR):
     def __init__(self, lasmim):
-        self.sink = sink = Sink(user_description(8))
+        self.sink = sink = stream.Endpoint(user_description(8))
 
         # Pack data
         pack_factor = lasmim.dw//8
@@ -25,7 +27,7 @@ class LiteUSBDMAWriter(Module, AutoCSR):
         self.dma = InsertReset(spi.DMAWriteController(writer, mode=spi.MODE_SINGLE_SHOT))
         self.comb += self.dma.reset.eq(self._reset.r & self._reset.re)
 
-        # Remove sop/eop/length/dst fields from payload
+        # Remove eop/length/dst fields from payload
         self.comb += [
             pack.sink.stb.eq(sink.stb),
             pack.sink.payload.eq(sink.payload),
@@ -53,7 +55,7 @@ class LiteUSBDMAWriter(Module, AutoCSR):
 
 class LiteUSBDMAReader(Module, AutoCSR):
     def __init__(self, lasmim, tag):
-        self.source = source = Source(user_description(8))
+        self.source = source = stream.Endpoint(user_description(8))
 
         reader = dma_lasmi.Reader(lasmim)
         self.dma = spi.DMAReadController(reader, mode=spi.MODE_SINGLE_SHOT)
@@ -76,7 +78,6 @@ class LiteUSBDMAReader(Module, AutoCSR):
         self.submodules += CompositeActor(g)
         self.comb += [
             source.stb.eq(unpack.source.stb),
-            source.sop.eq(cnt == 0),
             source.eop.eq(cnt == (self.dma.length*pack_factor-1)),
             source.length.eq(self.dma.length*pack_factor),
             source.data.eq(unpack.source.data),

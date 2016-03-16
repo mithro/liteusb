@@ -1,7 +1,8 @@
 from litex.gen import *
 from litex.gen.genlib.fsm import *
 
-from litex.soc.interconnect.stream import *
+from litex.soc.interconnect import stream
+from litex.soc.interconnect.stream import EndpointDescription
 from litex.soc.interconnect.stream_packet import *
 
 
@@ -18,7 +19,7 @@ packet_header = Header(packet_header_fields,
 
 def phy_description(dw):
     payload_layout = [("data", dw)]
-    return EndpointDescription(payload_layout, packetized=False)
+    return EndpointDescription(payload_layout)
 
 
 def packet_description(dw):
@@ -27,7 +28,7 @@ def packet_description(dw):
         ("data", dw),
         ("error", dw//8)
     ]
-    return EndpointDescription(payload_layout, param_layout, packetized=True)
+    return EndpointDescription(payload_layout, param_layout)
 
 
 def user_description(dw):
@@ -39,19 +40,19 @@ def user_description(dw):
         ("data", dw),
         ("error", dw//8)
     ]
-    return EndpointDescription(payload_layout, param_layout, packetized=True)
+    return EndpointDescription(payload_layout, param_layout)
 
 
 class LiteUSBMasterPort:
     def __init__(self, dw):
-        self.source = Source(user_description(dw))
-        self.sink = Sink(user_description(dw))
+        self.source = stream.Endpoint(user_description(dw))
+        self.sink = stream.Endpoint(user_description(dw))
 
 
 class LiteUSBSlavePort:
     def __init__(self, dw, tag):
-        self.sink = Sink(user_description(dw))
-        self.source = Source(user_description(dw))
+        self.sink = stream.Endpoint(user_description(dw))
+        self.source = stream.Endpoint(user_description(dw))
         self.tag = tag
 
 
