@@ -58,8 +58,8 @@ class FT245PHYSynchronous(Module):
         self.comb += [
             txe_n.eq(pads.txe_n),
             rxf_n.eq(pads.rxf_n),
-            wants_write.eq(~txe_n & write_fifo.source.stb),
-            wants_read.eq(~rxf_n & read_fifo.sink.ack),
+            wants_write.eq(~txe_n & write_fifo.source.valid),
+            wants_read.eq(~rxf_n & read_fifo.sink.ready),
         ]
 
         read_time_en, max_read_time = anti_starvation(self, read_time)
@@ -88,7 +88,7 @@ class FT245PHYSynchronous(Module):
                     NextState("WTR")
                 )
             ),
-            write_fifo.source.ack.eq(wants_write & data_w_accepted)
+            write_fifo.source.ready.eq(wants_write & data_w_accepted)
         )
         fsm.act("WTR",
             NextState("READ")
@@ -129,7 +129,7 @@ class FT245PHYSynchronous(Module):
                 pads.rd_n.eq(1),
                 pads.wr_n.eq(1)
             ),
-                read_buffer.sink.stb.eq(~pads.rd_n & ~rxf_n),
+                read_buffer.sink.valid.eq(~pads.rd_n & ~rxf_n),
                 read_buffer.sink.data.eq(data_r),
                 If(~txe_n & data_w_accepted,
                     data_w.eq(write_fifo.source.data)
@@ -177,8 +177,8 @@ class FT245PHYAsynchronous(Module):
         ]
 
         self.comb += [
-            wants_write.eq(~txe_n & write_fifo.source.stb),
-            wants_read.eq(~rxf_n & read_fifo.sink.ack),
+            wants_write.eq(~txe_n & write_fifo.source.valid),
+            wants_read.eq(~rxf_n & read_fifo.sink.ready),
         ]
 
         read_time_en, max_read_time = anti_starvation(self, read_time)
@@ -259,7 +259,7 @@ class FT245PHYAsynchronous(Module):
             )
         )
         read_fsm.act("ACQUIRE_DATA",
-            read_fifo.sink.stb.eq(1),
+            read_fifo.sink.valid.eq(1),
             read_fifo.sink.data.eq(data_r),
             NextState("WAIT_RXF_N")
         )
@@ -313,7 +313,7 @@ class FT245PHYAsynchronous(Module):
         )
         write_fsm.act("WAIT_TXE_N",
             If(txe_n,
-                write_fifo.source.ack.eq(1),
+                write_fifo.source.ready.eq(1),
                 NextState("IDLE")
             )
         )

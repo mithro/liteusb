@@ -110,13 +110,13 @@ class TB(Module):
 
         self.comb += [
             self.streamer.source.connect(self.streamer_randomizer.sink),
-            self.phy.sink.stb.eq(self.streamer_randomizer.source.stb),
+            self.phy.sink.valid.eq(self.streamer_randomizer.source.valid),
             self.phy.sink.data.eq(self.streamer_randomizer.source.data),
-            self.streamer_randomizer.source.ack.eq(self.phy.sink.ack),
+            self.streamer_randomizer.source.ready.eq(self.phy.sink.ready),
 
-            self.logger_randomizer.sink.stb.eq(self.phy.source.stb),
+            self.logger_randomizer.sink.valid.eq(self.phy.source.valid),
             self.logger_randomizer.sink.data.eq(self.phy.source.data),
-            self.phy.source.ack.eq(self.logger_randomizer.sink.ack),
+            self.phy.source.ready.eq(self.logger_randomizer.sink.ready),
             self.logger_randomizer.source.connect(self.logger.sink)
         ]
 

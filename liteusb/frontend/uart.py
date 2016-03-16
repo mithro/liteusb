@@ -18,17 +18,17 @@ class LiteUSBUART(UART):
 
         # TX
         self.comb += [
-            port.sink.stb.eq(phy.sink.stb),
-            port.sink.eop.eq(1),
+            port.sink.valid.eq(phy.sink.valid),
+            port.sink.last.eq(1),
             port.sink.length.eq(1),
             port.sink.dst.eq(port.tag),
             port.sink.data.eq(phy.sink.data),
-            phy.sink.ack.eq(port.sink.ack)
+            phy.sink.ready.eq(port.sink.ready)
         ]
 
         # RX
         self.comb += [
-            phy.source.stb.eq(port.source.stb),
+            phy.source.valid.eq(port.source.valid),
             phy.source.data.eq(port.source.data),
-            port.source.ack.eq(phy.source.ack)
+            port.source.ready.eq(phy.source.ready)
         ]

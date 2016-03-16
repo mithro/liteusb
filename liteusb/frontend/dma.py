@@ -27,11 +27,11 @@ class LiteUSBDMAWriter(Module, AutoCSR):
         self.dma = InsertReset(spi.DMAWriteController(writer, mode=spi.MODE_SINGLE_SHOT))
         self.comb += self.dma.reset.eq(self._reset.r & self._reset.re)
 
-        # Remove eop/length/dst fields from payload
+        # Remove last/length/dst fields from payload
         self.comb += [
-            pack.sink.stb.eq(sink.stb),
+            pack.sink.valid.eq(sink.valid),
             pack.sink.payload.eq(sink.payload),
-            sink.ack.eq(pack.sink.ack)
+            sink.ready.eq(pack.sink.ready)
         ]
 
         # Graph
@@ -43,12 +43,12 @@ class LiteUSBDMAWriter(Module, AutoCSR):
         self.submodules.ev = EventManager()
         self.ev.done = EventSourcePulse()
         self.ev.finalize()
-        self.comb += self.ev.done.trigger.eq(sink.stb & sink.eop)
+        self.comb += self.ev.done.trigger.eq(sink.valid & sink.last)
 
         # CRC
         self._crc_failed = CSRStatus()
         self.sync += \
-            If(sink.stb & sink.eop,
+            If(sink.valid & sink.last,
                 self._crc_failed.status.eq(sink.error)
             )
 
@@ -70,26 +70,26 @@ class LiteUSBDMAReader(Module, AutoCSR):
         self.sync += \
             If(self.dma.generator._shoot.re,
                 cnt.eq(0)
-            ).Elif(source.stb & source.ack,
+            ).Elif(source.valid & source.ready,
                 cnt.eq(cnt + 1)
             )
         g = DataFlowGraph()
         g.add_pipeline(self.dma, cast, unpack)
         self.submodules += CompositeActor(g)
         self.comb += [
-            source.stb.eq(unpack.source.stb),
-            source.eop.eq(cnt == (self.dma.length*pack_factor-1)),
+            source.valid.eq(unpack.source.valid),
+            source.last.eq(cnt == (self.dma.length*pack_factor-1)),
             source.length.eq(self.dma.length*pack_factor),
             source.data.eq(unpack.source.data),
             source.dst.eq(tag),
-            unpack.source.ack.eq(source.ack)
+            unpack.source.ready.eq(source.ready)
         ]
 
         # IRQ
         self.submodules.ev = EventManager()
         self.ev.done = EventSourcePulse()
         self.ev.finalize()
-        self.comb += self.ev.done.trigger.eq(source.stb & source.eop)
+        self.comb += self.ev.done.trigger.eq(source.valid & source.last)
 
 
 class LiteUSBDMA(Module, AutoCSR):

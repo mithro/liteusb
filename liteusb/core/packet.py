@@ -43,26 +43,26 @@ class LiteUSBPacketizer(Module):
         self.submodules += fsm
 
         fsm.act("IDLE",
-            If(sink.stb,
+            If(sink.valid,
                 NextState("INSERT_HEADER")
             )
         )
 
         fsm.act("INSERT_HEADER",
-            header_unpack.sink.stb.eq(1),
-            source.stb.eq(1),
+            header_unpack.sink.valid.eq(1),
+            source.valid.eq(1),
             source.data.eq(header_unpack.source.data),
-            header_unpack.source.ack.eq(source.ack),
-            If(header_unpack.sink.ack,
+            header_unpack.source.ready.eq(source.ready),
+            If(header_unpack.sink.ready,
                 NextState("COPY")
             )
         )
 
         fsm.act("COPY",
-            source.stb.eq(sink.stb),
+            source.valid.eq(sink.valid),
             source.data.eq(sink.data),
-            sink.ack.eq(source.ack),
-            If(source.ack & sink.eop,
+            sink.ready.eq(source.ready),
+            If(source.ready & sink.last,
                 NextState("IDLE")
             )
         )
@@ -104,47 +104,47 @@ class LiteUSBDepacketizer(Module):
 
         self.comb += preamble[0].eq(sink.data)
         for i in range(1, 4):
-            self.sync += If(sink.stb & sink.ack,
+            self.sync += If(sink.valid & sink.ready,
                     preamble[i].eq(preamble[i-1])
             )
         fsm.act("IDLE",
-            sink.ack.eq(1),
+            sink.ready.eq(1),
             If((preamble[3] == 0x5A) &
                (preamble[2] == 0xA5) &
                (preamble[1] == 0x5A) &
                (preamble[0] == 0xA5) &
-               sink.stb,
+               sink.valid,
                    NextState("RECEIVE_HEADER")
             ),
-            header_pack.source.ack.eq(1),
+            header_pack.source.ready.eq(1),
         )
 
         self.submodules.timer = WaitTimer(clk_freq*timeout)
         self.comb += self.timer.wait.eq(~fsm.ongoing("IDLE"))
 
         fsm.act("RECEIVE_HEADER",
-            header_pack.sink.stb.eq(sink.stb),
+            header_pack.sink.valid.eq(sink.valid),
             header_pack.sink.payload.eq(sink.payload),
             If(self.timer.done,
                 NextState("IDLE")
-            ).Elif(header_pack.source.stb,
+            ).Elif(header_pack.source.valid,
                 NextState("COPY")
             ).Else(
-                sink.ack.eq(1)
+                sink.ready.eq(1)
             )
         )
 
         self.comb += header_pack.reset.eq(self.timer.done)
 
-        eop = Signal()
+        last = Signal()
         cnt = Signal(32)
 
         fsm.act("COPY",
-            source.stb.eq(sink.stb),
-            source.eop.eq(eop),
+            source.valid.eq(sink.valid),
+            source.last.eq(last),
             source.data.eq(sink.data),
-            sink.ack.eq(source.ack),
-            If((source.stb & source.ack & eop) | self.timer.done,
+            sink.ready.eq(source.ready),
+            If((source.valid & source.ready & last) | self.timer.done,
                 NextState("IDLE")
             )
         )
@@ -152,7 +152,7 @@ class LiteUSBDepacketizer(Module):
         self.sync += \
             If(fsm.ongoing("IDLE"),
                 cnt.eq(0)
-            ).Elif(source.stb & source.ack,
+            ).Elif(source.valid & source.ready,
                 cnt.eq(cnt + 1)
             )
-        self.comb += eop.eq(cnt == source.length - 1)
+        self.comb += last.eq(cnt == source.length - 1)
