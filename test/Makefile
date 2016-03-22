@@ -1,7 +1,6 @@
-COREDIR = ../
 PYTHON = python3
 
-CMD = PYTHONPATH=$(COREDIR) $(PYTHON)
+CMD = $(PYTHON)
 
 ft245_sync_tb:
 	$(CMD) ft245_sync_tb.py
