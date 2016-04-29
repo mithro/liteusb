@@ -11,7 +11,7 @@ if sys.version_info[:3] < (3, 3):
 
 setup(
 	name="liteusb",
-	version="1.0",
+	version="0.1",
 	description="small footprint and configurable USB core",
 	long_description=open("README").read(),
 	author="Florent Kermarrec",
